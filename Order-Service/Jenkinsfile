@@ -4,15 +4,18 @@ pipeline {
     environment {
         PATH = "/usr/local/bin:$PATH"
     }
+
     tools {
-        maven 'Maven'  // This must match the name you set in Global Tool Config
+        maven 'Maven' // Must match your Jenkins Global Tool Config
     }
+
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/saif78692/order-service.git'
             }
         }
+
         stage('Build') {
             steps {
                 dir('Order-Service') {
@@ -20,6 +23,7 @@ pipeline {
                 }
             }
         }
+
         stage('Test') {
             steps {
                 dir('Order-Service') {
@@ -27,24 +31,34 @@ pipeline {
                 }
             }
         }
+
         stage('Docker Build & Push') {
-           steps {
-               dir('Order-Service') {
-                   withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                       sh '''
-                           echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                           docker build -t saifsh786/order-service:1.0 .
-                           docker push saifsh786/order-service:1.0
-                       '''
-                   }
-               }
-           }
+            steps {
+                dir('Order-Service') {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker build -t saifsh786/order-service:1.0 .
+                            docker push saifsh786/order-service:1.0
+                        '''
+                    }
+                }
+            }
         }
+
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-credentials']) {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ec2-credentials',
+                    keyFileVariable: 'KEY_FILE',
+                    usernameVariable: 'USER'
+                )]) {
                     sh '''
-                        ssh ec2-user@3.80.195.203 '
+                        ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@3.80.195.203 '
                         docker pull saifsh786/order-service:1.0 &&
                         docker stop order || true &&
                         docker rm order || true &&
