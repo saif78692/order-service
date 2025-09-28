@@ -50,9 +50,17 @@ pipeline {
             }
         }
 
+        // 🔎 Add this stage just before deploy
+        stage('Test SSH to EC2') {
+            steps {
+                sshagent(['ec2-credentials']) {
+                    sh 'ssh -o StrictHostKeyChecking=no ec2-user@3.80.195.203 "echo SUCCESS: Jenkins can connect"'
+                }
+            }
+        }
+
         stage('Deploy to EC2') {
             steps {
-                // Use sshagent to provide the SSH key from Jenkins credentials
                 sshagent(['ec2-credentials']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ec2-user@3.80.195.203 '
