@@ -15,7 +15,7 @@ public class OrderController {
     private List<Orders> ordersList = new ArrayList<>();
 
     @PostMapping
-    public Orders saveOrder(Orders order) {
+    public Orders saveOrder(@RequestBody Orders order) {
         order.setStatus("CREATED");
         ordersList.add(order);
         return  order;
