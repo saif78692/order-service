@@ -1,8 +1,8 @@
 pipeline {
     agent any
-     tools {
-            maven 'Maven'  // This must match the name you set in Global Tool Config
-      }
+    tools {
+        maven 'Maven'  // This must match the name you set in Global Tool Config
+    }
     stages {
         stage('Checkout') {
             steps {
@@ -11,18 +11,24 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                dir('Order-Service') {
+                    sh 'mvn clean package -DskipTests'
+                }
             }
         }
         stage('Test') {
             steps {
-                sh 'mvn test'
+                dir('Order-Service') {
+                    sh 'mvn test'
+                }
             }
         }
         stage('Docker Build & Push') {
             steps {
-                sh 'docker build -t saif78692/order-service:1.0 .'
-                sh 'docker push saif78692/order-service:1.0'
+                dir('Order-Service') {
+                    sh 'docker build -t saif78692/order-service:1.0 .'
+                    sh 'docker push saif78692/order-service:1.0'
+                }
             }
         }
         stage('Deploy to EC2') {
