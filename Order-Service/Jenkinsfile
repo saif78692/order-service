@@ -52,13 +52,10 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ec2-credentials',
-                    keyFileVariable: 'KEY_FILE',
-                    usernameVariable: 'USER'
-                )]) {
+                // Use sshagent to provide the SSH key from Jenkins credentials
+                sshagent(['ec2-credentials']) {
                     sh '''
-                        ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@3.80.195.203 '
+                        ssh -o StrictHostKeyChecking=no ec2-user@3.80.195.203 '
                         docker pull saifsh786/order-service:1.0 &&
                         docker stop order || true &&
                         docker rm order || true &&
