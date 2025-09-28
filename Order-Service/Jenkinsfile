@@ -1,5 +1,9 @@
 pipeline {
     agent any
+
+    environment {
+        PATH = "/usr/local/bin:$PATH"
+    }
     tools {
         maven 'Maven'  // This must match the name you set in Global Tool Config
     }
