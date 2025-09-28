@@ -42,11 +42,7 @@ pipeline {
                     )]) {
                         sh '''
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-
-                            # FIX: Using docker buildx build to explicitly target the EC2's AMD64 architecture.
-                            # We use '--load' because we are not using '--push' yet (we want to tag it first)
                             docker buildx build --platform linux/amd64 -t saifsh786/order-service:1.0 --load .
-
                             docker push saifsh786/order-service:1.0
                         '''
                     }
@@ -67,7 +63,7 @@ pipeline {
             steps {
                 sshagent(['ec2-credentials']) {
                     sh '''
-                        ssh -o StrictHostHostKeyChecking=no ec2-user@3.80.195.203 '
+                        ssh -o StrictHostKeyChecking=no ec2-user@3.80.195.203 '
                         docker pull saifsh786/order-service:1.0 &&
                         docker stop order || true &&
                         docker rm order || true &&
