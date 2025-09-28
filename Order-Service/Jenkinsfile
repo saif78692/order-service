@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/saif78692/order-service.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                sh 'docker build -t saif78692/order-service:1.0 .'
+                sh 'docker push saif78692/order-service:1.0'
+            }
+        }
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-credentials']) {
+                    sh '''
+                        ssh ec2-user@3.80.195.203 '
+                        docker pull saif78692/order-service:1.0 &&
+                        docker stop order || true &&
+                        docker rm order || true &&
+                        docker run -d -p 8080:8080 --name order saif78692/order-service:1.0
+                        '
+                    '''
+                }
+            }
+        }
+    }
+}
